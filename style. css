@@ -1,0 +1,147 @@
+/* General Layout Settings */
+:root {
+    --primary-color: #1b365d;
+    --accent-color: #0078d4;
+    --border-color: #000000;
+    --bg-light: #f8f9fa;
+    --header-bg: #e9ecef;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 15px;
+    background-color: var(--bg-light);
+    color: #333;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.header-titles h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.header-titles h2 {
+    font-size: 1rem;
+    margin: 4px 0 0 0;
+    color: #555;
+}
+
+/* Action Buttons */
+.action-toolbar {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #218838;
+}
+
+.btn-secondary {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #005a9e;
+}
+
+/* Table Design */
+.table-container {
+    overflow-x: auto;
+    background: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 4px;
+}
+
+th {
+    background-color: var(--header-bg);
+    font-weight: bold;
+}
+
+input[type="number"], input[type="text"] {
+    width: 90%;
+    padding: 2px;
+    border: 1px solid #ccc;
+    text-align: center;
+    font-size: 0.78rem;
+}
+
+.summary-row {
+    background-color: #f0f4f8;
+    font-weight: bold;
+}
+
+.final-row {
+    background-color: #e2eafc;
+    font-weight: bold;
+}
+
+/* Footer Credit */
+.app-footer {
+    margin-top: 15px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Print Setup for A3 Landscape */
+@media print {
+    @page {
+        size: A3 landscape;
+        margin: 10mm;
+    }
+
+    .action-toolbar {
+        display: none !important;
+    }
+
+    body {
+        padding: 0;
+        background: white;
+    }
+
+    input {
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .table-container {
+        box-shadow: none;
+    }
+}
