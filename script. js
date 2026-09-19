@@ -1,0 +1,152 @@
+/**
+ * Consolidated Marks Register Automation
+ * Designed by: LAKSHMIKANTH R (Mob:9844444871)
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+    let studentCount = 0;
+
+    const tbody = document.getElementById("studentTableBody");
+    const addBtn = document.getElementById("addStudentBtn");
+    const printBtn = document.getElementById("printBtn");
+
+    // Add initial student block
+    addStudentBlock();
+
+    addBtn.addEventListener("click", addStudentBlock);
+    printBtn.addEventListener("click", () => window.print());
+
+    function addStudentBlock() {
+        studentCount++;
+        const blockId = `std_${studentCount}`;
+
+        const exams = [
+            { name: "FA-1", sem: "SEM-1", weight: 0.15, max: 60 },
+            { name: "FA-2", sem: "SEM-1", weight: 0.15, max: 60 },
+            { name: "SA-1", sem: "SEM-1", weight: 0.20, max: 80 },
+            { name: "SEM-1", sem: "SEM-1", weight: 0.50, max: 200, isTotal: true },
+            { name: "FA-3", sem: "SEM-2", weight: 0.15, max: 60 },
+            { name: "FA-4", sem: "SEM-2", weight: 0.15, max: 60 },
+            { name: "SA-2", sem: "SEM-2", weight: 0.20, max: 80 },
+            { name: "SEM-2", sem: "SEM-2", weight: 0.50, max: 200, isTotal: true },
+            { name: "SEM 1+2", sem: "SEM 1+2", weight: 1.00, max: 400, isFinal: true }
+        ];
+
+        exams.forEach((exam, index) => {
+            const tr = document.createElement("tr");
+            tr.classList.add(blockId);
+            if (exam.isTotal) tr.classList.add("summary-row");
+            if (exam.isFinal) tr.classList.add("final-row");
+
+            let html = "";
+
+            // Merge metadata cells across 9 sub-rows
+            if (index === 0) {
+                html += `<td rowspan="9">${studentCount}</td>`;
+                html += `<td rowspan="9"><input type="text" placeholder="Student Name ${studentCount}"></td>`;
+                html += `<td rowspan="9"><input type="number" min="0" placeholder="Present"></td>`;
+                html += `<td rowspan="9"><input type="number" min="0" placeholder="Total"></td>`;
+            }
+
+            html += `<td>${exam.sem}</td>`;
+            html += `<td>${exam.name}</td>`;
+            html += `<td>${exam.weight}</td>`;
+
+            // Subject columns (Kannada, English, Maths, EVS)
+            const subjects = ["kan", "eng", "mat", "evs"];
+            subjects.forEach(sub => {
+                if (exam.isTotal || exam.isFinal) {
+                    html += `<td id="${blockId}_${sub}_m_${index}">0</td>`;
+                } else {
+                    html += `<td><input type="number" class="${blockId}_sub ${sub}" data-exam="${index}" data-max="${exam.max}" value="0"></td>`;
+                }
+                html += `<td id="${blockId}_${sub}_g_${index}">-</td>`;
+            });
+
+            // Summary Totals
+            html += `<td id="${blockId}_tot_m_${index}">0</td>`;
+            html += `<td id="${blockId}_tot_p_${index}">0%</td>`;
+            html += `<td id="${blockId}_tot_g_${index}">-</td>`;
+
+            // Co-Curricular & Result
+            if (index === 0) {
+                html += `<td rowspan="9"><input type="text" style="width:30px"></td>`;
+                html += `<td rowspan="9"><input type="text" style="width:30px"></td>`;
+                html += `<td rowspan="9"><input type="text" style="width:30px"></td>`;
+                html += `<td rowspan="9"><input type="text" style="width:30px"></td>`;
+                html += `<td rowspan="9"><input type="text" style="width:30px"></td>`;
+                html += `<td rowspan="9" id="${blockId}_result" style="font-weight:bold;">PENDING</td>`;
+            }
+
+            tr.innerHTML = html;
+            tbody.appendChild(tr);
+        });
+
+        // Add Event Listeners for Dynamic Recalculation
+        document.querySelectorAll(`.${blockId}_sub`).forEach(input => {
+            input.addEventListener("input", () => calculateStudentBlock(blockId));
+        });
+    }
+
+    function calculateGrade(percentage) {
+        if (percentage >= 85) return "A+";
+        if (percentage >= 70) return "A";
+        if (percentage >= 50) return "B+";
+        if (percentage >= 35) return "B";
+        return "C";
+    }
+
+    function calculateStudentBlock(blockId) {
+        const subjects = ["kan", "eng", "mat", "evs"];
+        const maxMarks = [60, 60, 80, 200, 60, 60, 80, 200, 400];
+
+        let scores = { kan: Array(9).fill(0), eng: Array(9).fill(0), mat: Array(9).fill(0), evs: Array(9).fill(0) };
+
+        // Read direct marks inputs
+        document.querySelectorAll(`.${blockId}_sub`).forEach(input => {
+            const sub = input.classList[1];
+            const examIdx = parseInt(input.dataset.exam);
+            const val = parseFloat(input.value) || 0;
+            scores[sub][examIdx] = val;
+
+            // Grade for single exam sub-row
+            const grade = calculateGrade((val / (maxMarks[examIdx] / 4)) * 100);
+            document.getElementById(`${blockId}_${sub}_g_${examIdx}`).innerText = grade;
+        });
+
+        // Compute Semester Totals
+        subjects.forEach(sub => {
+            scores[sub][3] = scores[sub][0] + scores[sub][1] + scores[sub][2]; // SEM-1
+            scores[sub][7] = scores[sub][4] + scores[sub][5] + scores[sub][6]; // SEM-2
+            scores[sub][8] = scores[sub][3] + scores[sub][7];                 // TOTAL
+
+            [3, 7, 8].forEach(idx => {
+                document.getElementById(`${blockId}_${sub}_m_${idx}`).innerText = scores[sub][idx];
+                const grade = calculateGrade((scores[sub][idx] / (maxMarks[idx] / 4)) * 100);
+                document.getElementById(`${blockId}_${sub}_g_${idx}`).innerText = grade;
+            });
+        });
+
+        // Row Totals & Overall Percentages
+        for (let i = 0; i < 9; i++) {
+            const total = scores.kan[i] + scores.eng[i] + scores.mat[i] + scores.evs[i];
+            const pct = (total / maxMarks[i]) * 100;
+            const overallGrade = calculateGrade(pct);
+
+            document.getElementById(`${blockId}_tot_m_${i}`).innerText = total;
+            document.getElementById(`${blockId}_tot_p_${i}`).innerText = pct.toFixed(1) + "%";
+            document.getElementById(`${blockId}_tot_g_${i}`).innerText = overallGrade;
+        }
+
+        // Calculate Overall Result
+        const finalPct = (scores.kan[8] + scores.eng[8] + scores.mat[8] + scores.evs[8]) / 400 * 100;
+        const resCell = document.getElementById(`${blockId}_result`);
+        if (finalPct >= 35) {
+            resCell.innerText = "PASS";
+            resCell.style.color = "green";
+        } else {
+            resCell.innerText = "FAIL";
+            resCell.style.color = "red";
+        }
+    }
+});
